@@ -1,58 +1,31 @@
+import logging
 import os
 import asyncio
-from aiogram import Bot, Dispatcher, types
-from aiogram import exceptions as tg_ex
-import random
+from aiogram import Bot, Dispatcher
 
-from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import InputFile, FSInputFile
+from aiogram.fsm.strategy import FSMStrategy
+from dotenv import load_dotenv
 
+import giveaway
 import joining
 
-CHAT_ID = '-1001727181740'
-ADMIN_IDS = [753529002, 6161307295]
-
-# Токен вашего бота
-TOKEN = ''
+# Загрузка переменных окружения из файла
+load_dotenv()
 
 # Создаем экземпляр класса Bot
-bot = Bot(token=TOKEN)
+bot = Bot(token=os.getenv('TOKEN'))
 
 # Создаем экземпляр класса Dispatcher
-dp = Dispatcher(storage=MemoryStorage())
+dp = Dispatcher(storage=MemoryStorage(), fsm_strategy=FSMStrategy.CHAT)
 
-# Функция, которая будет вызываться при команде /mlg
-# async def send_gif(message: types.Message):
-#     try:
-#         # Получаем случайную гифку из папки gifs
-#         # gif_file =
-#         gif = FSInputFile(f"gifs/{random.choice(os.listdir('gifs/'))}")
-#         # Отправляем гифку пользователю
-#         await bot.send_animation(message.chat.id, gif)
-#         # Удаление сообщения с командой
-#         await message.delete()
-#
-#     except tg_ex.TelegramRetryAfter as e:
-#         # Ошибка FloodWait, ожидаем указанное количество секунд и пытаемся снова
-#         print(e)
-#         # Ждем пока ошибка пройдет
-#         await asyncio.sleep(e.retry_after.imag)
-#         # Пытаемся еще раз отправить
-#         # await send_gif(message)
-#
-#     except tg_ex.TelegramAPIError as e:
-#         # Другие ошибки API Telegram обрабатываем по своему усмотрению
-#         await message.reply(f'Произошла ошибка при отправке гифки: {e}')
-
-
-# async def start_mlg(message: types.Message):
+# Запускаем логи
+logging.basicConfig(filename='all.log', encoding='utf-8', level=logging.DEBUG)
 
 async def main():
-    print(1)
-    # Регистрируем обработчик команды /mlg
-    # dp.message.register(send_gif, Command('mlg'))
+    # Регистрация роутеров
     dp.include_routers(joining.router)
+    dp.include_routers(giveaway.router)
     # Пропуск апдейтов
     await bot.delete_webhook(drop_pending_updates=True)
     # Запуск полинга
